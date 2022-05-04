@@ -2,6 +2,7 @@ package devcon
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -19,4 +20,18 @@ func TestNewClient(t *testing.T) {
 		t.Fatalf("\ngot: %q | wanted %q\n", client.ip, os.Getenv("SSH_USER"))
 	}
 	t.Logf("\nuser: %q\nIP: %q", client.clientCfg.User, client.ip)
+}
+
+func TestRunCommand(t *testing.T) {
+	un, pw := getCredsFromEnv()
+	if un == "" || pw == "" {
+		t.Fatal("env variables not set")
+	}
+	client := NewClient(un, pw, "172.28.48.13")
+	output, err := client.RunCommand("show version")
+	if err != nil {
+		t.Fatal(err)
+	}
+	delimeter := strings.Repeat("#", 60)
+	t.Logf("\n%v\n%v\n%v", delimeter, output, delimeter)
 }
