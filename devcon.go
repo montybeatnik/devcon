@@ -18,6 +18,8 @@ type sshClient struct {
 func NewClient(un, pw, ip string, args ...string) *sshClient {
 	return &sshClient{
 		ip: ip,
+		// establish the SSH config from the crytpo package and associate it to
+		// the clientCfg field.
 		clientCfg: &ssh.ClientConfig{
 			User: un,
 			Auth: []ssh.AuthMethod{
