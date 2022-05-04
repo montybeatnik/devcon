@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+var labSRX = "10.0.0.60"
+
 func getCredsFromEnv() (string, string) {
 	return os.Getenv("SSH_USER"), os.Getenv("SSH_PASSWORD")
 }
@@ -15,7 +17,10 @@ func TestNewClient(t *testing.T) {
 	if un == "" || pw == "" {
 		t.Fatal("env variables not set")
 	}
-	client := NewClient(un, pw, "127.0.0.1")
+	client, err := NewClient(un, pw, labSRX)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if client.ip == "" {
 		t.Fatalf("\ngot: %q | wanted %q\n", client.ip, os.Getenv("SSH_USER"))
 	}
@@ -27,11 +32,15 @@ func TestRunCommand(t *testing.T) {
 	if un == "" || pw == "" {
 		t.Fatal("env variables not set")
 	}
-	client := NewClient(un, pw, "172.28.48.13")
+	client, err := NewClient(un, pw, labSRX)
+	if err != nil {
+		t.Fatal(err)
+	}
 	output, err := client.RunCommand("show version")
 	if err != nil {
 		t.Fatal(err)
 	}
 	delimeter := strings.Repeat("#", 60)
 	t.Logf("\n%v\n%v\n%v", delimeter, output, delimeter)
+	t.Logf("%q", client.sessionClose())
 }
