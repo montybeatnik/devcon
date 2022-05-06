@@ -42,5 +42,22 @@ func TestRunCommand(t *testing.T) {
 	}
 	delimeter := strings.Repeat("#", 60)
 	t.Logf("\n%v\n%v\n%v", delimeter, output, delimeter)
-	t.Logf("%q", client.sessionClose())
+}
+
+func BenchmarkRunCommand(b *testing.B) {
+	un, pw := getCredsFromEnv()
+	if un == "" || pw == "" {
+		b.Error("env variables not set")
+	}
+	client, err := NewClient(un, pw, labSRX)
+	if err != nil {
+		b.Fatal(err)
+	}
+	// run the RunCommand method b.N times
+	for n := 0; n < b.N; n++ {
+		_, err := client.RunCommand("show version")
+		if err != nil {
+			b.Log(err)
+		}
+	}
 }
