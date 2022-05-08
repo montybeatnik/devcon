@@ -17,14 +17,11 @@ func TestNewClient(t *testing.T) {
 	if un == "" || pw == "" {
 		t.Fatal("env variables not set")
 	}
-	client, err := NewClient(un, pw, labSRX)
-	if err != nil {
-		t.Fatal(err)
+	client := NewClient(un, pw, labSRX)
+	if client.ipAndPort == "" {
+		t.Fatalf("\ngot: %q | wanted %q\n", client.ipAndPort, os.Getenv("SSH_USER"))
 	}
-	if client.ip == "" {
-		t.Fatalf("\ngot: %q | wanted %q\n", client.ip, os.Getenv("SSH_USER"))
-	}
-	t.Logf("\nuser: %q\nIP: %q", client.clientCfg.User, client.ip)
+	t.Logf("\nuser: %q\nIP: %q", client.clientCfg.User, client.ipAndPort)
 }
 
 func TestRunCommand(t *testing.T) {
@@ -32,10 +29,7 @@ func TestRunCommand(t *testing.T) {
 	if un == "" || pw == "" {
 		t.Fatal("env variables not set")
 	}
-	client, err := NewClient(un, pw, labSRX)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := NewClient(un, pw, labSRX)
 	output, err := client.RunCommand("show version")
 	if err != nil {
 		t.Fatal(err)
@@ -49,10 +43,7 @@ func BenchmarkRunCommand(b *testing.B) {
 	if un == "" || pw == "" {
 		b.Error("env variables not set")
 	}
-	client, err := NewClient(un, pw, labSRX)
-	if err != nil {
-		b.Fatal(err)
-	}
+	client := NewClient(un, pw, labSRX)
 	// run the RunCommand method b.N times
 	for n := 0; n < b.N; n++ {
 		_, err := client.RunCommand("show version")
