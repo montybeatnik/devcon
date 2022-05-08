@@ -1,6 +1,10 @@
 # Devcon
 A simple package to ssh into devices.
 
+## Overview
+A client can only have 1 session at a time. Hence, we cannot include the session info in the factory function. Doing so would cause all subsequent calls to fail.
+
+
 ## Usage
 ```go
 package main
