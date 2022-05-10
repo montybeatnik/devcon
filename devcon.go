@@ -58,7 +58,7 @@ func (c *SSHClient) RunCommand(cmd string) (string, error) {
 	return string(output), err
 }
 
-func (c *sshClient) RunMany(cmds ...string) (string, error) {
+func (c *SSHClient) RunMany(cmds ...string) (string, error) {
 	output, err := c.executeMany(cmds...)
 	if err != nil {
 		return "", err
@@ -84,7 +84,7 @@ func assignStdInAndOut(sess *ssh.Session) (io.Reader, io.WriteCloser, error) {
 }
 
 // executeMany sets up an interactive session with the target device
-func (c *sshClient) executeMany(cmds ...string) (bytes.Buffer, error) {
+func (c *SSHClient) executeMany(cmds ...string) (bytes.Buffer, error) {
 	var output bytes.Buffer
 	client, err := ssh.Dial("tcp", c.ipAndPort, c.clientCfg)
 	if err != nil {
