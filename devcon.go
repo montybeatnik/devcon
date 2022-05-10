@@ -8,20 +8,20 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// sshClient holds the elements to setup an SSH client
-type sshClient struct {
+// SSHClient holds the elements to setup an SSH client
+type SSHClient struct {
 	ipAndPort string
 	clientCfg *ssh.ClientConfig
 }
 
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
-func NewClient(un, pw, ip string, args ...string) *sshClient {
+func NewClient(un, pw, ip string, args ...string) *SSHClient {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
 	ipAndPort := fmt.Sprintf(ip + ":" + defaultPort)
-	return &sshClient{
+	return &SSHClient{
 		ipAndPort: ipAndPort,
 		clientCfg: &ssh.ClientConfig{
 			User: un,
@@ -38,7 +38,7 @@ func NewClient(un, pw, ip string, args ...string) *sshClient {
 // and run the command. Should the session or command fail, a meaningful
 // error is returned. If the command succeeds, the output and a nil error
 // is returned.
-func (c *sshClient) RunCommand(cmd string) (string, error) {
+func (c *SSHClient) RunCommand(cmd string) (string, error) {
 	client, err := ssh.Dial("tcp", c.ipAndPort, c.clientCfg)
 	if err != nil {
 		return "", errors.Wrap(err, "dail failed")
