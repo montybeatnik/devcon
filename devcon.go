@@ -36,11 +36,9 @@ func NewClient(un, pw, ip string, args ...string) *SSHClient {
 	}
 }
 
-// RunCommand takes in a command and attempts to establishe a session
-// and run the command. Should the session or command fail, a meaningful
-// error is returned. If the command succeeds, the output and a nil error
-// is returned.
-func (c *SSHClient) RunCommand(cmd string) (string, error) {
+// Run takes in a command and attempts to establishe a remote session
+// and run the command.
+func (c *SSHClient) Run(cmd string) (string, error) {
 	client, err := ssh.Dial("tcp", c.ipAndPort, c.clientCfg)
 	if err != nil {
 		return "", errors.Wrap(err, "dail failed")
@@ -58,7 +56,10 @@ func (c *SSHClient) RunCommand(cmd string) (string, error) {
 	return string(output), err
 }
 
-func (c *SSHClient) RunMany(cmds ...string) (string, error) {
+// RunAll takes in one or more commands. It establishes a remote session with the target IP
+// and attempts to run all of the commands supplied. You must remember to exit as this
+// method does establish an interactive session.
+func (c *SSHClient) RunAll(cmds ...string) (string, error) {
 	output, err := c.executeMany(cmds...)
 	if err != nil {
 		return "", err
