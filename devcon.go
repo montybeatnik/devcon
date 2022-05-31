@@ -22,7 +22,7 @@ func NewClient(un, pw, ip string, args ...string) *SSHClient {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
-	ipAndPort := fmt.Sprintf(ip + ":" + defaultPort)
+	ipAndPort := fmt.Sprintf("%v:%v", ip, defaultPort)
 	return &SSHClient{
 		ipAndPort: ipAndPort,
 		clientCfg: &ssh.ClientConfig{

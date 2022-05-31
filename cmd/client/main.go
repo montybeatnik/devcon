@@ -8,11 +8,17 @@ import (
 	"github.com/montybeatnik/devcon"
 )
 
+var (
+	homeLabIP = "10.0.0.60"
+	mac       = "10.0.0.80"
+	prodCisco = "172.30.83.76"
+)
+
 func main() {
-	un := os.Getenv("SSH_USER")
-	pw := os.Getenv("SSH_PASSWORD")
-	ip := "10.0.0.60"
-	client := devcon.NewClient(un, pw, ip)
+	un := os.Getenv("USER")
+	// pw := "password"
+	pw := os.Getenv("PASSWORD")
+	client := devcon.NewClient(un, pw, prodCisco)
 	output, err := client.RunCommand("show version")
 	if err != nil {
 		log.Println("command failed", err)
