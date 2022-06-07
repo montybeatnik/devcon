@@ -30,7 +30,7 @@ func TestRunCommand(t *testing.T) {
 		t.Fatal("env variables not set")
 	}
 	client := NewClient(un, pw, labSRX)
-	output, err := client.RunCommand("show version")
+	output, err := client.Run("show version")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func BenchmarkRunCommand(b *testing.B) {
 	client := NewClient(un, pw, labSRX)
 	// run the RunCommand method b.N times
 	for n := 0; n < b.N; n++ {
-		_, err := client.RunCommand("show version")
+		_, err := client.Run("show version")
 		if err != nil {
 			b.Log(err)
 		}

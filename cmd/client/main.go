@@ -21,7 +21,7 @@ func main() {
 	client := devcon.NewClient(un, pw, prodCisco)
 	output, err := client.Run("show version")
 	if err != nil {
-		log.Println("command failed", err)
+		fmt.Fprintf(os.Stderr, "command failed: %v\n", err)
 		os.Exit(42)
 	}
 	fmt.Println(output)

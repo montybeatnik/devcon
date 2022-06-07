@@ -2,8 +2,7 @@
 A simple package to ssh into devices.
 
 ## Overview
-A client can only have 1 session at a time. Hence, we cannot include the session info in the factory function. Doing so would cause all subsequent calls to fail.
-
+This package only supports authentication via username/password. 
 
 ## Usage
 ```go
@@ -18,17 +17,17 @@ import (
 )
 
 func main() {
-	un := os.Getenv("SSH_USER")
-	pw := os.Getenv("SSH_PASSWORD")
+	un := os.Getenv("USER")
+	pw := os.Getenv("PASSWORD")
 	ip := "10.0.0.60"
 	client, err := devcon.NewClient(un, pw, ip)
 	if err != nil {
-		log.Println("client setup failed", err)
+		fmt.Fprintf(os.Stderr, "could not create client: %v\n", err)
 		os.Exit(42)
 	}
-	output, err := client.RunCommand("show version")
+	output, err := client.Run("show version")
 	if err != nil {
-		log.Println("command failed", err)
+		fmt.Fprintf(os.Stderr, "command failed: %v\n", err)
 		os.Exit(42)
 	}
 	fmt.Println(output)
@@ -36,7 +35,8 @@ func main() {
 ```
 
 ## TODO
-- [x] Pull the client bits out of RunCommand and pull that logic into the Factory function
+- [] Add Docker container for test server.
+- [] Add support for public key auth. 
 
 ## Profile
 - go test -v -run Run -cpuprofile cpu.prof -memprofile mem.prof -bench .
