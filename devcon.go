@@ -18,21 +18,41 @@ type SSHClient struct {
 
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
-func NewClient(un, pw, ip string, args ...string) *SSHClient {
+func NewClient(un, ip string, opts ...option) *SSHClient {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
 	ipAndPort := fmt.Sprintf("%v:%v", ip, defaultPort)
-	return &SSHClient{
+	client := &SSHClient{
 		ipAndPort: ipAndPort,
 		clientCfg: &ssh.ClientConfig{
-			User: un,
-			Auth: []ssh.AuthMethod{
-				ssh.Password(pw),
-			},
+			User:            un,
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 			Timeout:         time.Duration(time.Second * 5),
 		},
+	}
+	for _, opt := range opts {
+		opt(client)
+	}
+	return client
+}
+
+type option func(*SSHClient)
+
+// Option sets the options specified.
+func (c *SSHClient) Option(opts ...option) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
+// Password sets SSHClient's password.
+func Password(pw string) option {
+	return func(c *SSHClient) {
+		authMethod := []ssh.AuthMethod{
+			ssh.Password(pw),
+		}
+		c.clientCfg.Auth = authMethod
 	}
 }
 

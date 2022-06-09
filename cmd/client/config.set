@@ -1,0 +1,5 @@
+configure exclusive
+set system host-name HOME_SRX210
+show | compare
+commit and-quit comment UPDATING_HOSTNAME
+exit
