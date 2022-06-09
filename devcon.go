@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,6 +16,36 @@ import (
 type SSHClient struct {
 	ipAndPort string
 	clientCfg *ssh.ClientConfig
+}
+
+type option func(*SSHClient)
+
+// Password sets SSHClient's password.
+func Password(pw string) option {
+	return func(c *SSHClient) {
+		authMethod := []ssh.AuthMethod{
+			ssh.Password(pw),
+		}
+		c.clientCfg.Auth = authMethod
+	}
+}
+
+// PrivateKey sets SSHClient's private key.
+func PrivateKey(keyfile string) option {
+	privKeyData, err := ioutil.ReadFile(keyfile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	privkey, err := ssh.ParsePrivateKey(privKeyData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return func(c *SSHClient) {
+		authMethod := []ssh.AuthMethod{
+			ssh.PublicKeys(privkey),
+		}
+		c.clientCfg.Auth = authMethod
+	}
 }
 
 // NewClient is a factory function that takes in SSH parameters
@@ -35,25 +67,6 @@ func NewClient(un, ip string, opts ...option) *SSHClient {
 		opt(client)
 	}
 	return client
-}
-
-type option func(*SSHClient)
-
-// Option sets the options specified.
-func (c *SSHClient) Option(opts ...option) {
-	for _, opt := range opts {
-		opt(c)
-	}
-}
-
-// Password sets SSHClient's password.
-func Password(pw string) option {
-	return func(c *SSHClient) {
-		authMethod := []ssh.AuthMethod{
-			ssh.Password(pw),
-		}
-		c.clientCfg.Auth = authMethod
-	}
 }
 
 // Run takes in a command and attempts to establishe a remote session
