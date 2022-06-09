@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/montybeatnik/devcon"
 )
@@ -14,7 +13,6 @@ func main() {
 		os.Getenv("SSH_USER"),
 		"10.0.0.60",
 		devcon.Password(os.Getenv("SSH_PASSWORD")),
-		devcon.Timeout(time.Second*1),
 	)
 	out, err := client.Run("show version")
 	if err != nil {

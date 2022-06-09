@@ -4,17 +4,24 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
+	"path/filepath"
 
 	"github.com/montybeatnik/devcon"
 )
 
 func main() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	keyFile := filepath.Join(homeDir, ".ssh/id_rsa")
+	if err != nil {
+		log.Fatal(err)
+	}
 	client := devcon.NewClient(
-		os.Getenv("SSH_USER"),
+		"rolodev",
 		"10.0.0.60",
-		devcon.Password(os.Getenv("SSH_PASSWORD")),
-		devcon.Timeout(time.Second*1),
+		devcon.PrivateKey(keyFile),
 	)
 	out, err := client.Run("show version")
 	if err != nil {

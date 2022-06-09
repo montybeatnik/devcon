@@ -48,6 +48,13 @@ func PrivateKey(keyfile string) option {
 	}
 }
 
+// Timeout sets SSHClient's timeout value.
+func Timeout(seconds time.Duration) option {
+	return func(c *SSHClient) {
+		c.clientCfg.Timeout = seconds
+	}
+}
+
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
 func NewClient(un, ip string, opts ...option) *SSHClient {
