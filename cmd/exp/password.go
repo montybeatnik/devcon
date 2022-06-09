@@ -12,7 +12,7 @@ func main() {
 	client := devcon.NewClient(
 		os.Getenv("SSH_USER"),
 		"10.0.0.60",
-		devcon.Password(os.Getenv("SSH_PASSWORD")),
+		devcon.SetPassword(os.Getenv("SSH_PASSWORD")),
 	)
 	out, err := client.Run("show version")
 	if err != nil {

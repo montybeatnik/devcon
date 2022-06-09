@@ -38,12 +38,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer conn.Close()
 	sess, err := conn.NewSession()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer sess.Close()
 	sess.Stdout = os.Stdout
-	sess.Stdin = os.Stdin
+	// sess.Stdin = os.Stdin
 	_ = sess.Run("show version")
 	sess.Close()
 }

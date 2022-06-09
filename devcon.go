@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 // SSHClient holds the elements to setup an SSH client
@@ -21,7 +22,7 @@ type SSHClient struct {
 type option func(*SSHClient)
 
 // Password sets SSHClient's password.
-func Password(pw string) option {
+func SetPassword(pw string) option {
 	return func(c *SSHClient) {
 		authMethod := []ssh.AuthMethod{
 			ssh.Password(pw),
@@ -31,7 +32,7 @@ func Password(pw string) option {
 }
 
 // PrivateKey sets SSHClient's private key.
-func PrivateKey(keyfile string) option {
+func SetPrivateKey(keyfile string) option {
 	privKeyData, err := ioutil.ReadFile(keyfile)
 	if err != nil {
 		log.Fatal(err)
@@ -49,9 +50,19 @@ func PrivateKey(keyfile string) option {
 }
 
 // Timeout sets SSHClient's timeout value.
-func Timeout(seconds time.Duration) option {
+func SetTimeout(seconds time.Duration) option {
 	return func(c *SSHClient) {
 		c.clientCfg.Timeout = seconds
+	}
+}
+
+func SetHostKeyCallback(knownHostsFile string) option {
+	return func(c *SSHClient) {
+		hostKeyCallback, err := knownhosts.New(knownHostsFile)
+		if err != nil {
+			hostKeyCallback = ssh.InsecureIgnoreHostKey()
+		}
+		c.clientCfg.HostKeyCallback = hostKeyCallback
 	}
 }
 
