@@ -2,7 +2,7 @@
 A simple package to ssh into devices.
 
 ## Overview
-This package only supports authentication via username/password. 
+This package only supports authentication via username/password.
 
 ## Usage
 ```go
@@ -16,27 +16,45 @@ import (
 	"github.com/montybeatnik/devcon"
 )
 
+// Example with Password
 func main() {
-	un := os.Getenv("USER")
-	pw := os.Getenv("PASSWORD")
-	ip := "10.0.0.60"
-	client, err := devcon.NewClient(un, pw, ip)
+	client := devcon.NewClient(
+		os.Getenv("SSH_USER"),
+		"10.0.0.60",
+		devcon.Password(os.Getenv("SSH_PASSWORD")),
+	)
+	out, err := client.Run("show version")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not create client: %v\n", err)
-		os.Exit(42)
+		log.Fatalf("command failed: %v", err)
 	}
-	output, err := client.Run("show version")
+	fmt.Println(out)
+}
+
+// Example with Private Key
+func main() {
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "command failed: %v\n", err)
-		os.Exit(42)
+		log.Fatal(err)
 	}
-	fmt.Println(output)
+	keyFile := filepath.Join(homeDir, ".ssh/id_rsa")
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := devcon.NewClient(
+		"rolodev",
+		"10.0.0.60",
+		devcon.PrivateKey(keyFile),
+	)
+	out, err := client.Run("show version")
+	if err != nil {
+		log.Fatalf("command failed: %v", err)
+	}
+	fmt.Println(out)
 }
 ```
 
 ## TODO
-- [] Add Docker container for test server.
-- [] Add support for public key auth. 
+- [] Add support for public key auth.
 
 ## Profile
 - go test -v -run Run -cpuprofile cpu.prof -memprofile mem.prof -bench .

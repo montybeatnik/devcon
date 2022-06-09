@@ -9,14 +9,18 @@ import (
 	"github.com/montybeatnik/devcon"
 )
 
-// func main() {
-// 	client := devcon.NewClient(os.Getenv("SSH_USER"), "10.0.0.60", devcon.Password(os.Getenv("SSH_PASSWORD")))
-// 	out, err := client.Run("show version")
-// 	if err != nil {
-// 		log.Fatalf("command failed: %v", err)
-// 	}
-// 	fmt.Println(out)
-// }
+func main() {
+	client := devcon.NewClient(
+		os.Getenv("SSH_USER"),
+		"10.0.0.60",
+		devcon.Password(os.Getenv("SSH_PASSWORD")),
+	)
+	out, err := client.Run("show version")
+	if err != nil {
+		log.Fatalf("command failed: %v", err)
+	}
+	fmt.Println(out)
+}
 
 func main() {
 	homeDir, err := os.UserHomeDir()
@@ -27,7 +31,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := devcon.NewClient("rolodev", "10.0.0.60", devcon.PrivateKey(keyFile))
+	client := devcon.NewClient(
+		"rolodev",
+		"10.0.0.60",
+		devcon.PrivateKey(keyFile),
+	)
 	out, err := client.Run("show version")
 	if err != nil {
 		log.Fatalf("command failed: %v", err)
