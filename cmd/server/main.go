@@ -23,7 +23,8 @@ func main() {
 		}
 	})
 
-	log.Fatal(ssh.ListenAndServe("10.0.0.80:22", nil,
+	// log.Fatal(ssh.ListenAndServe("127.0.0.1:2222", nil,
+	log.Fatal(ssh.ListenAndServe("127.0.0.1:2222", nil,
 		ssh.HostKeyFile("/Users/chrishern/.ssh/id_rsa"),
 		ssh.PasswordAuth(ssh.PasswordHandler(func(ctx ssh.Context, password string) bool {
 			return password == "password"

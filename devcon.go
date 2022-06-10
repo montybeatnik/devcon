@@ -91,7 +91,6 @@ func NewClient(un, ip string, opts ...option) *SSHClient {
 	for _, opt := range opts {
 		opt(client)
 	}
-	fmt.Println("ip and port", client.ip, client.port)
 	return client
 }
 
