@@ -36,13 +36,20 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+var (
+	verCMD           = "show version"
+	verRespons       = "17.1R3"
+	intfTerseCMD     = "show interfaces terse"
+	intfTerseRespons = "ge-0/0/0"
+)
+
 func serverUp(ctx context.Context) {
 	ssh.Handle(func(s ssh.Session) {
 		switch s.RawCommand() {
-		case "show version":
-			io.WriteString(s, fmt.Sprintf("17.1R3\n"))
-		case "show interfaces terse":
-			io.WriteString(s, fmt.Sprintf("ge-0/0/0"))
+		case verCMD:
+			io.WriteString(s, verRespons)
+		case intfTerseCMD:
+			io.WriteString(s, intfTerseRespons)
 		default:
 			io.WriteString(s, fmt.Sprintf("Hello %s\n", s.User()))
 		}
@@ -78,13 +85,29 @@ func TestRunCommand(t *testing.T) {
 		SetPassword("password"),
 		SetPort("2222"),
 	)
-	output, err := client.Run("show version")
-	if err != nil {
-		t.Fatal(err)
+	testCases := map[string]struct {
+		cmd      string
+		expected string
+	}{
+		"version": {
+			cmd:      verCMD,
+			expected: verRespons,
+		},
+		"interface terse": {
+			cmd:      intfTerseCMD,
+			expected: intfTerseRespons,
+		},
 	}
-	expected := "17.1R3"
-	if !strings.Contains(output, expected) {
-		t.Errorf("got: %q, expected: %q", strings.TrimSpace(output), expected)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			output, err := client.Run(tc.cmd)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if output != tc.expected {
+				t.Errorf("got: %q, expected: %q", strings.TrimSpace(output), tc.expected)
+			}
+		})
 	}
 }
 
