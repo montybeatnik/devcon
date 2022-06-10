@@ -18,7 +18,7 @@ func main() {
 	un := os.Getenv("USER")
 	// pw := "password"
 	pw := os.Getenv("PASSWORD")
-	client := devcon.NewClient(un, pw, prodCisco)
+	client := devcon.NewClient(un, prodCisco, devcon.SetPassword(pw))
 	output, err := client.Run("show version")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "command failed: %v\n", err)

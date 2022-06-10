@@ -66,7 +66,7 @@ func audit(in <-chan auditOp) <-chan auditOp {
 	go func() {
 		defer close(out)
 		for audit := range in {
-			client := devcon.NewClient(un, pw, audit.ip)
+			client := devcon.NewClient(un, audit.ip, devcon.SetPassword(pw))
 			start := time.Now()
 			output, err := client.Run("show version | i IOS ")
 			audit.duration = time.Since(start)

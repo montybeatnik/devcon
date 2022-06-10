@@ -94,7 +94,7 @@ func audit(done <-chan struct{}, in <-chan auditOp) <-chan auditOp {
 		for audit := range in {
 			select {
 			default:
-				client := devcon.NewClient(un, pw, audit.ip)
+				client := devcon.NewClient(un, audit.ip, devcon.SetPassword(pw))
 				start := time.Now()
 				output, err := client.Run("show version | i IOS XE ")
 				audit.duration = time.Since(start)

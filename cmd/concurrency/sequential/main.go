@@ -27,7 +27,7 @@ func main() {
 		hnip := strings.Split(d, ",")
 		hn := hnip[0]
 		ip := hnip[1]
-		client := devcon.NewClient(un, pw, ip)
+		client := devcon.NewClient(un, ip, devcon.SetPassword(pw))
 		out, err := client.Run("show version | i IOS XE")
 		if err != nil {
 			log.Println(err)
