@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"time"
 
 	"github.com/pkg/errors"
@@ -19,63 +18,98 @@ type SSHClient struct {
 	clientCfg *ssh.ClientConfig
 }
 
-type option func(*SSHClient)
+type option func() (func(*SSHClient), error)
 
-// Password sets SSHClient's password.
-func SetPort(port string) option {
-	return func(c *SSHClient) {
-		c.port = port
+// failedOption - helper to expose error from option builder
+func failedOption(err error) option {
+	return func() (func(*SSHClient), error) {
+		return nil, err
+	}
+}
+
+// properOption - helper to expose valid setter from option builder
+func properOption(setter func(*SSHClient)) option {
+	return func() (func(*SSHClient), error) {
+		return setter, nil
 	}
 }
 
 // Password sets SSHClient's password.
+func SetPort(port string) option {
+	return properOption(func(c *SSHClient) {
+		c.port = port
+	})
+}
+
+// Password sets SSHClient's password.
 func SetPassword(pw string) option {
-	return func(c *SSHClient) {
+	return properOption(func(c *SSHClient) {
 		authMethod := []ssh.AuthMethod{
 			ssh.Password(pw),
 		}
 		c.clientCfg.Auth = authMethod
-	}
+	})
 }
 
 // PrivateKey sets SSHClient's private key.
 func SetPrivateKey(keyfile string) option {
 	privKeyData, err := ioutil.ReadFile(keyfile)
 	if err != nil {
-		log.Fatal(err)
+		return failedOption(err)
 	}
 	privkey, err := ssh.ParsePrivateKey(privKeyData)
 	if err != nil {
-		log.Fatal(err)
+		return failedOption(err)
 	}
-	return func(c *SSHClient) {
+	return properOption(func(c *SSHClient) {
 		authMethod := []ssh.AuthMethod{
 			ssh.PublicKeys(privkey),
 		}
 		c.clientCfg.Auth = authMethod
-	}
+	})
 }
 
 // Timeout sets SSHClient's timeout value.
 func SetTimeout(seconds time.Duration) option {
-	return func(c *SSHClient) {
+	return properOption(func(c *SSHClient) {
 		c.clientCfg.Timeout = seconds
-	}
+	})
 }
 
 func SetHostKeyCallback(knownHostsFile string) option {
-	return func(c *SSHClient) {
-		hostKeyCallback, err := knownhosts.New(knownHostsFile)
-		if err != nil {
-			hostKeyCallback = ssh.InsecureIgnoreHostKey()
-		}
-		c.clientCfg.HostKeyCallback = hostKeyCallback
+	hostKeyCallback, err := knownhosts.New(knownHostsFile)
+	if err != nil {
+		return failedOption(err)
 	}
+	return properOption(func(c *SSHClient) {
+		c.clientCfg.HostKeyCallback = hostKeyCallback
+	})
+}
+
+// setup - helper to set optional dependencies.
+func (c *SSHClient) setup(opts ...option) error {
+	// today, setup will be repeated for every service with options :(
+	if c == nil {
+		return nil
+	}
+	for _, option := range opts {
+		if option == nil {
+			continue
+		}
+		setter, err := option()
+		if err != nil {
+			return err
+		}
+		if setter != nil {
+			setter(c)
+		}
+	}
+	return nil
 }
 
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
-func NewClient(un, ip string, opts ...option) *SSHClient {
+func NewClient(un, ip string, opts ...option) (*SSHClient, error) {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
@@ -88,10 +122,10 @@ func NewClient(un, ip string, opts ...option) *SSHClient {
 			Timeout:         time.Duration(time.Second * 5),
 		},
 	}
-	for _, opt := range opts {
-		opt(client)
+	if err := client.setup(opts...); err != nil {
+		return client, err
 	}
-	return client
+	return client, nil
 }
 
 // Run takes in a command and attempts to establishe a remote session
