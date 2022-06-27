@@ -15,8 +15,8 @@ import (
 
 // SSHClient holds the elements to setup an SSH client
 type SSHClient struct {
-	ip, port  string
-	clientCfg *ssh.ClientConfig
+	target, port string
+	clientCfg    *ssh.ClientConfig
 }
 
 type option func(*SSHClient)
@@ -75,15 +75,15 @@ func SetHostKeyCallback(knownHostsFile string) option {
 
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
-func NewClient(un, ip string, opts ...option) *SSHClient {
+func NewClient(user, target string, opts ...option) *SSHClient {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
 	client := &SSHClient{
-		ip:   ip,
-		port: defaultPort,
+		target: target,
+		port:   defaultPort,
 		clientCfg: &ssh.ClientConfig{
-			User:            un,
+			User:            user,
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 			Timeout:         time.Duration(time.Second * 5),
 		},
@@ -97,7 +97,7 @@ func NewClient(un, ip string, opts ...option) *SSHClient {
 // Run takes in a command and attempts to establishe a remote session
 // and run the command.
 func (c *SSHClient) Run(cmd string) (string, error) {
-	client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", c.ip, c.port), c.clientCfg)
+	client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", c.target, c.port), c.clientCfg)
 	if err != nil {
 		return "", errors.Wrap(err, "dail failed")
 	}
@@ -145,7 +145,7 @@ func assignStdInAndOut(sess *ssh.Session) (io.Reader, io.WriteCloser, error) {
 // executeMany sets up an interactive session with the target device
 func (c *SSHClient) executeMany(cmds ...string) (bytes.Buffer, error) {
 	var output bytes.Buffer
-	client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", c.ip, c.port), c.clientCfg)
+	client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", c.target, c.port), c.clientCfg)
 	if err != nil {
 		return output, err
 	}

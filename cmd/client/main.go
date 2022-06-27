@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/montybeatnik/devcon"
@@ -16,28 +16,48 @@ var (
 )
 
 func main() {
+	run()
+}
+
+type SoftwareVersionReply struct {
+	SoftwareInformation struct {
+		Text               string `xml:",chardata"`
+		HostName           string `xml:"host-name"`
+		ProductModel       string `xml:"product-model"`
+		ProductName        string `xml:"product-name"`
+		Jsr                string `xml:"jsr"`
+		PackageInformation struct {
+			Text    string `xml:",chardata"`
+			Name    string `xml:"name"`
+			Comment string `xml:"comment"`
+		} `xml:"package-information"`
+	} `xml:"software-information"`
+}
+
+func run() {
 	un := os.Getenv("USER")
-	pw := "password"
-	// pw := os.Getenv("PASSWORD")
+	// pw := "password"
+	pw := os.Getenv("PASSWORD")
 	client := devcon.NewClient(un,
-		localhost,
+		homeLabIP,
 		devcon.SetPassword(pw),
-		devcon.SetPort("2222"),
 	)
-	output, err := client.Run("show version")
+	output, err := client.Run("show version | display xml")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "command failed: %v\n", err)
 		os.Exit(42)
 	}
-	fmt.Println(output)
-	cmds := []string{
-		"show ip interface brief",
-		"exit",
-	}
-	interfaceOutput, err := client.RunAll(cmds...)
-	if err != nil {
-		log.Println("command failed", err)
-		os.Exit(42)
-	}
-	fmt.Println(interfaceOutput)
+	var swver SoftwareVersionReply
+	xml.Unmarshal([]byte(output), &swver)
+	fmt.Println(swver.SoftwareInformation.HostName, swver.SoftwareInformation.ProductModel)
+	// cmds := []string{
+	// 	"show ip interface brief",
+	// 	"exit",
+	// }
+	// interfaceOutput, err := client.RunAll(cmds...)
+	// if err != nil {
+	// 	log.Println("command failed", err)
+	// 	os.Exit(42)
+	// }
+	// fmt.Println(interfaceOutput)
 }

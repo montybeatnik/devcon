@@ -28,8 +28,8 @@ func TestNewClient(t *testing.T) {
 	ip := "127.0.0.1"
 	port := "22"
 	client := NewClient(un, ip, SetPassword(pw))
-	if client.ip == "" {
-		t.Fatalf("\ngot: %q | wanted %q\n", client.ip, ip)
+	if client.target == "" {
+		t.Fatalf("\ngot: %q | wanted %q\n", client.target, ip)
 	}
 	if client.port == "" {
 		t.Fatalf("\ngot: %q | wanted %q\n", client.port, port)

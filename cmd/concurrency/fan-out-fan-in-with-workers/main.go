@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/montybeatnik/devcon"
+	"github.com/pkg/profile"
 )
 
 var (
@@ -19,8 +20,8 @@ us-dn1vw-rtr01,172.30.115.7
 us-dn1vw-rtr02,172.30.114.38
 us-iowac-rtr01,172.30.117.26`
 
-	pw = os.Getenv("PASSWORD")
-	un = os.Getenv("USER")
+	pw = os.Getenv("SSH_PASSWORD")
+	un = os.Getenv("SSH_USER")
 )
 
 var workers int
@@ -30,6 +31,10 @@ func init() {
 }
 
 func main() {
+	defer profile.Start(
+		profile.TraceProfile,
+		profile.ProfilePath("."),
+	).Stop()
 	start := time.Now()
 	devices := strings.Split(devicesCSV, "\n")
 	// The done channel will be shared by the entire pipeline
