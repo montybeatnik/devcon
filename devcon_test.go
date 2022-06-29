@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
-	"unsafe"
 
-	"github.com/gliderlabs/ssh"
+	glssh "github.com/gliderlabs/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
-var labSRX = "10.0.0.60"
+var (
+	localhost = "localhost"
+)
 
 func getCredsFromEnv() (string, string) {
 	return os.Getenv("SSH_USER"), os.Getenv("SSH_PASSWORD")
@@ -44,7 +46,7 @@ var (
 )
 
 func serverUp(ctx context.Context) {
-	ssh.Handle(func(s ssh.Session) {
+	glssh.Handle(func(s glssh.Session) {
 		switch s.RawCommand() {
 		case verCMD:
 			io.WriteString(s, verRespons)
@@ -59,9 +61,9 @@ func serverUp(ctx context.Context) {
 		select {
 		default:
 			// log.Fatal(ssh.ListenAndServe("127.0.0.1:2222", nil,
-			ssh.ListenAndServe("127.0.0.1:2222", nil,
-				ssh.HostKeyFile("/Users/chrishern/.ssh/id_rsa"),
-				ssh.PasswordAuth(ssh.PasswordHandler(func(ctx ssh.Context, password string) bool {
+			glssh.ListenAndServe("127.0.0.1:2222", nil,
+				glssh.HostKeyFile("/Users/chrishern/.ssh/id_rsa"),
+				glssh.PasswordAuth(glssh.PasswordHandler(func(ctx glssh.Context, password string) bool {
 					return password == "password"
 				})),
 			)
@@ -69,40 +71,59 @@ func serverUp(ctx context.Context) {
 	}
 }
 
-func setWinsize(f *os.File, w, h int) {
-	syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), uintptr(syscall.TIOCSWINSZ),
-		uintptr(unsafe.Pointer(&struct{ h, w, x, y uint16 }{uint16(h), uint16(w), 0, 0})))
-}
-
 func TestRunCommand(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	go serverUp(ctx)
 	time.Sleep(time.Second * 1)
-	client := NewClient(
-		"timmy",
-		"127.0.0.1",
-		SetPassword("password"),
-		SetPort("2222"),
-	)
 	testCases := map[string]struct {
+		target   string
+		pw       string
 		cmd      string
 		expected string
+		err      error
 	}{
 		"version": {
+			target:   localhost,
 			cmd:      verCMD,
 			expected: verRespons,
+			pw:       "password",
+		},
+		"pw-fail": {
+			target:   localhost,
+			cmd:      verCMD,
+			expected: "",
+			pw:       "haha",
+			err:      ErrAuthFailure,
 		},
 		"interface terse": {
+			target:   localhost,
 			cmd:      intfTerseCMD,
 			expected: intfTerseRespons,
+			pw:       "password",
+		},
+		"timeout": {
+			target:   "1.1.1.1",
+			cmd:      "",
+			expected: "",
+			pw:       "password",
+			err:      ErrTimeout,
 		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			client := NewClient(
+				"timmy",
+				tc.target,
+				SetPassword(tc.pw),
+				SetPort("2222"),
+			)
 			output, err := client.Run(tc.cmd)
 			if err != nil {
-				t.Fatal(err)
+				if err != tc.err {
+					t.Fatal(err)
+				}
+				t.SkipNow()
 			}
 			if output != tc.expected {
 				t.Errorf("got: %q, expected: %q", strings.TrimSpace(output), tc.expected)
@@ -111,13 +132,72 @@ func TestRunCommand(t *testing.T) {
 	}
 }
 
+func TestSetTimeout(t *testing.T) {
+	dur := time.Second * 5
+	client := NewClient("blah", localhost, SetTimeout(dur))
+	if client.clientCfg.Timeout != dur {
+		t.Errorf("got: %v, expected: %v", client.clientCfg.Timeout, dur)
+	}
+}
+
+func TestSetPort(t *testing.T) {
+	port := "2222"
+	client := NewClient("blah", localhost, SetPort(port))
+	if client.port != port {
+		t.Errorf("got: %v, expected: %v", client.port, port)
+	}
+}
+
+func TestSetPrivateKey(t *testing.T) {
+	keyfile := filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
+	client := NewClient("blah", localhost, SetPrivateKey(keyfile))
+	for _, am := range client.clientCfg.Auth {
+		if am == nil {
+			t.Errorf("expected non nil auth method")
+		}
+	}
+}
+
+func TestRunAll(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	go serverUp(ctx)
+	time.Sleep(time.Second * 1)
+	client := NewClient("chrishern", localhost,
+		SetPassword("password"),
+		SetPort("2222"),
+	)
+	_, err := client.RunAll()
+	if err != nil {
+		if !strings.Contains(err.Error(), "connection refused") {
+			t.Error(err)
+		}
+	}
+}
+
+func TestAssignStdInAndOut(t *testing.T) {
+	_, _, err := assignStdInAndOut(&ssh.Session{})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestHostKeyCallback(t *testing.T) {
+	kh := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+	client := NewClient("chrishern", localhost,
+		SetHostKeyCallback(kh),
+	)
+	if client.clientCfg.HostKeyCallback == nil {
+		t.Error("host key call ack should not be nil")
+	}
+}
+
 func BenchmarkRunCommand(b *testing.B) {
 	un, pw := getCredsFromEnv()
 	if un == "" || pw == "" {
 		b.Error("env variables not set")
 	}
-	client := NewClient(un, labSRX, SetPassword(pw))
-	// run the RunCommand method b.N times
+	client := NewClient(un, localhost, SetPassword(pw))
 	for n := 0; n < b.N; n++ {
 		_, err := client.Run("show version")
 		if err != nil {

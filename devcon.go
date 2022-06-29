@@ -6,11 +6,17 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
+)
+
+var (
+	ErrAuthFailure = errors.New("failed authentication")
+	ErrTimeout     = errors.New("timeout")
 )
 
 // SSHClient holds the elements to setup an SSH client
@@ -99,6 +105,12 @@ func NewClient(user, target string, opts ...option) *SSHClient {
 func (c *SSHClient) Run(cmd string) (string, error) {
 	client, err := ssh.Dial("tcp", fmt.Sprintf("%v:%v", c.target, c.port), c.clientCfg)
 	if err != nil {
+		if strings.Contains(err.Error(), "unable to authenticate") {
+			return "", ErrAuthFailure
+		}
+		if strings.Contains(err.Error(), "i/o timeout") {
+			return "", ErrTimeout
+		}
 		return "", errors.Wrap(err, "dail failed")
 	}
 	defer client.Close()
