@@ -15,6 +15,7 @@ import (
 
 - vsrx1 - 10.0.0.86
 - vsrx2 - 10.0.0.23
+- vsrx3 - 10.0.0.212
 */
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	// log.Println(knownHostsFile)
 	client := devcon.NewClient(
 		os.Getenv("SSH_USER"),
-		"10.0.0.23",
+		"10.0.0.212",
 		devcon.WithPassword(os.Getenv("SSH_PASSWORD")),
 		devcon.WithTimeout(time.Second*1),
 		devcon.WithHostKeyCallback(khfp),

@@ -25,17 +25,17 @@ type SSHClient struct {
 	clientCfg    *ssh.ClientConfig
 }
 
-type option func(*SSHClient)
+type Option func(*SSHClient)
 
 // WithPort sets SSHClient's listening port.
-func WithPort(port string) option {
+func WithPort(port string) Option {
 	return func(c *SSHClient) {
 		c.port = port
 	}
 }
 
 // WithPassword sets SSHClient's password.
-func WithPassword(pw string) option {
+func WithPassword(pw string) Option {
 	return func(c *SSHClient) {
 		authMethod := []ssh.AuthMethod{
 			ssh.Password(pw),
@@ -45,7 +45,7 @@ func WithPassword(pw string) option {
 }
 
 // WithPrivateKey sets SSHClient's private key.
-func WithPrivateKey(keyfile string) option {
+func WithPrivateKey(keyfile string) Option {
 	privKeyData, err := ioutil.ReadFile(keyfile)
 	if err != nil {
 		log.Fatal(err)
@@ -63,7 +63,7 @@ func WithPrivateKey(keyfile string) option {
 }
 
 // WithTimeout sets SSHClient's timeout value.
-func WithTimeout(seconds time.Duration) option {
+func WithTimeout(seconds time.Duration) Option {
 	return func(c *SSHClient) {
 		c.clientCfg.Timeout = seconds
 	}
@@ -71,7 +71,7 @@ func WithTimeout(seconds time.Duration) option {
 
 // WithHostKeyCallback sets the SSHClient's initializes the
 // client with an allow list of known trusted hosts.
-func WithHostKeyCallback(knownHostsFile string) option {
+func WithHostKeyCallback(knownHostsFile string) Option {
 	return func(c *SSHClient) {
 		hostKeyCallback, err := knownhosts.New(knownHostsFile)
 		if err != nil {
@@ -83,7 +83,7 @@ func WithHostKeyCallback(knownHostsFile string) option {
 
 // NewClient is a factory function that takes in SSH parameters
 // and returns a new client
-func NewClient(user, target string, opts ...option) *SSHClient {
+func NewClient(user, target string, opts ...Option) *SSHClient {
 	// establish the SSH config from the crytpo package and associate it to
 	// the clientCfg field.
 	defaultPort := "22"
