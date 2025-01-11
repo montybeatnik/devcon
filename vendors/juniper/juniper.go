@@ -72,3 +72,20 @@ func (jc *JuniperClient) InterfacesTerse() (InterfaceTerse, error) {
 	}
 	return intTerse, nil
 }
+
+func prepareDiff(cfg []string) []string {
+	prepCfg := []string{
+		"configure private",
+		"show | compare",
+		"rollback",
+		"exit",
+		"exit",
+	}
+	prepCfg = append(prepCfg[:1], append(cfg, prepCfg[1:]...)...)
+	return prepCfg
+}
+
+func (jc *JuniperClient) Diff(cfg []string) (string, error) {
+	cfg = prepareDiff(cfg)
+	return jc.SSHClient.RunAll(cfg...)
+}

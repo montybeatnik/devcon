@@ -10,14 +10,6 @@ import (
 	"github.com/montybeatnik/devcon"
 )
 
-/*
-# lab nodes
-
-- vsrx1 - 10.0.0.86
-- vsrx2 - 10.0.0.23
-- vsrx3 - 10.0.0.212
-*/
-
 func main() {
 	khfp := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
 	// knownHostsFile, err := os.Open(khfp)
