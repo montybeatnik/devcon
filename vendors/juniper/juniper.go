@@ -85,7 +85,29 @@ func prepareDiff(cfg []string) []string {
 	return prepCfg
 }
 
+// prepareCfg takes in the actual config and inserts
+// it into the command necessary to drop into config
+// mode, print a diff, and exit config mode and then
+// the device altogether.
+// TODO:
+// take in a commit message.
+func prepareCfg(cfg []string) []string {
+	prepCfg := []string{
+		"configure private",
+		"show | compare",
+		"commit and-quit",
+		"exit",
+	}
+	prepCfg = append(prepCfg[:1], append(cfg, prepCfg[1:]...)...)
+	return prepCfg
+}
+
 func (jc *JuniperClient) Diff(cfg []string) (string, error) {
 	cfg = prepareDiff(cfg)
+	return jc.SSHClient.RunAll(cfg...)
+}
+
+func (jc *JuniperClient) ApplyConfig(cfg []string) (string, error) {
+	cfg = prepareCfg(cfg)
 	return jc.SSHClient.RunAll(cfg...)
 }
