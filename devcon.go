@@ -27,15 +27,15 @@ type SSHClient struct {
 
 type option func(*SSHClient)
 
-// Password sets SSHClient's password.
-func SetPort(port string) option {
+// WithPort sets SSHClient's listening port.
+func WithPort(port string) option {
 	return func(c *SSHClient) {
 		c.port = port
 	}
 }
 
-// Password sets SSHClient's password.
-func SetPassword(pw string) option {
+// WithPassword sets SSHClient's password.
+func WithPassword(pw string) option {
 	return func(c *SSHClient) {
 		authMethod := []ssh.AuthMethod{
 			ssh.Password(pw),
@@ -44,8 +44,8 @@ func SetPassword(pw string) option {
 	}
 }
 
-// PrivateKey sets SSHClient's private key.
-func SetPrivateKey(keyfile string) option {
+// WithPrivateKey sets SSHClient's private key.
+func WithPrivateKey(keyfile string) option {
 	privKeyData, err := ioutil.ReadFile(keyfile)
 	if err != nil {
 		log.Fatal(err)
@@ -62,14 +62,16 @@ func SetPrivateKey(keyfile string) option {
 	}
 }
 
-// Timeout sets SSHClient's timeout value.
-func SetTimeout(seconds time.Duration) option {
+// WithTimeout sets SSHClient's timeout value.
+func WithTimeout(seconds time.Duration) option {
 	return func(c *SSHClient) {
 		c.clientCfg.Timeout = seconds
 	}
 }
 
-func SetHostKeyCallback(knownHostsFile string) option {
+// WithHostKeyCallback sets the SSHClient's initializes the
+// client with an allow list of known trusted hosts.
+func WithHostKeyCallback(knownHostsFile string) option {
 	return func(c *SSHClient) {
 		hostKeyCallback, err := knownhosts.New(knownHostsFile)
 		if err != nil {

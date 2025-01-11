@@ -29,7 +29,7 @@ func TestNewClient(t *testing.T) {
 	}
 	ip := "127.0.0.1"
 	port := "22"
-	client := NewClient(un, ip, SetPassword(pw))
+	client := NewClient(un, ip, WithPassword(pw))
 	if client.target == "" {
 		t.Fatalf("\ngot: %q | wanted %q\n", client.target, ip)
 	}
@@ -115,8 +115,8 @@ func TestRunCommand(t *testing.T) {
 			client := NewClient(
 				"timmy",
 				tc.target,
-				SetPassword(tc.pw),
-				SetPort("2222"),
+				WithPassword(tc.pw),
+				WithPort("2222"),
 			)
 			output, err := client.Run(tc.cmd)
 			if err != nil {
@@ -134,7 +134,7 @@ func TestRunCommand(t *testing.T) {
 
 func TestSetTimeout(t *testing.T) {
 	dur := time.Second * 5
-	client := NewClient("blah", localhost, SetTimeout(dur))
+	client := NewClient("blah", localhost, WithTimeout(dur))
 	if client.clientCfg.Timeout != dur {
 		t.Errorf("got: %v, expected: %v", client.clientCfg.Timeout, dur)
 	}
@@ -142,7 +142,7 @@ func TestSetTimeout(t *testing.T) {
 
 func TestSetPort(t *testing.T) {
 	port := "2222"
-	client := NewClient("blah", localhost, SetPort(port))
+	client := NewClient("blah", localhost, WithPort(port))
 	if client.port != port {
 		t.Errorf("got: %v, expected: %v", client.port, port)
 	}
@@ -150,7 +150,7 @@ func TestSetPort(t *testing.T) {
 
 func TestSetPrivateKey(t *testing.T) {
 	keyfile := filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
-	client := NewClient("blah", localhost, SetPrivateKey(keyfile))
+	client := NewClient("blah", localhost, WithPrivateKey(keyfile))
 	for _, am := range client.clientCfg.Auth {
 		if am == nil {
 			t.Errorf("expected non nil auth method")
@@ -164,8 +164,8 @@ func TestRunAll(t *testing.T) {
 	go serverUp(ctx)
 	time.Sleep(time.Second * 1)
 	client := NewClient("chrishern", localhost,
-		SetPassword("password"),
-		SetPort("2222"),
+		WithPassword("password"),
+		WithPort("2222"),
 	)
 	_, err := client.RunAll()
 	if err != nil {
@@ -185,7 +185,7 @@ func TestAssignStdInAndOut(t *testing.T) {
 func TestHostKeyCallback(t *testing.T) {
 	kh := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
 	client := NewClient("chrishern", localhost,
-		SetHostKeyCallback(kh),
+		WithHostKeyCallback(kh),
 	)
 	if client.clientCfg.HostKeyCallback == nil {
 		t.Error("host key call ack should not be nil")
@@ -197,7 +197,7 @@ func BenchmarkRunCommand(b *testing.B) {
 	if un == "" || pw == "" {
 		b.Error("env variables not set")
 	}
-	client := NewClient(un, localhost, SetPassword(pw))
+	client := NewClient(un, localhost, WithPassword(pw))
 	for n := 0; n < b.N; n++ {
 		_, err := client.Run("show version")
 		if err != nil {

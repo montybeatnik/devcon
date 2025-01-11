@@ -21,7 +21,7 @@ func main() {
 	client := devcon.NewClient(
 		"rolodev",
 		"10.0.0.60",
-		devcon.SetPrivateKey(keyFile),
+		devcon.WithPrivateKey(keyFile),
 	)
 	out, err := client.Run("show version")
 	if err != nil {

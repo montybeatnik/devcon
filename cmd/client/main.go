@@ -40,7 +40,7 @@ func run() {
 	pw := os.Getenv("PASSWORD")
 	client := devcon.NewClient(un,
 		homeLabIP,
-		devcon.SetPassword(pw),
+		devcon.WithPassword(pw),
 	)
 	output, err := client.Run("show version | display xml")
 	if err != nil {
