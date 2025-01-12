@@ -10,43 +10,15 @@ import (
 	"github.com/montybeatnik/devcon"
 )
 
-type InterfaceTerse struct {
-	InterfaceInformation struct {
-		PhysicalInterface []struct {
-			Text             string `xml:",chardata"`
-			Name             string `xml:"name"`
-			AdminStatus      string `xml:"admin-status"`
-			OperStatus       string `xml:"oper-status"`
-			LogicalInterface []struct {
-				Text              string `xml:",chardata"`
-				Name              string `xml:"name"`
-				AdminStatus       string `xml:"admin-status"`
-				OperStatus        string `xml:"oper-status"`
-				FilterInformation string `xml:"filter-information"`
-				AddressFamily     []struct {
-					Text              string `xml:",chardata"`
-					AddressFamilyName string `xml:"address-family-name"`
-					InterfaceAddress  []struct {
-						Text     string `xml:",chardata"`
-						IfaLocal struct {
-							Text string `xml:",chardata"`
-							Emit string `xml:"emit,attr"`
-						} `xml:"ifa-local"`
-						IfaDestination struct {
-							Text string `xml:",chardata"`
-							Emit string `xml:"emit,attr"`
-						} `xml:"ifa-destination"`
-					} `xml:"interface-address"`
-				} `xml:"address-family"`
-			} `xml:"logical-interface"`
-		} `xml:"physical-interface"`
-	} `xml:"interface-information"`
-}
-
+// JuniperClient represents a Juniper Device's SSH client.
+// It holds methods to interact with the remote device, such as
+// operational mode and configuration commands.
 type JuniperClient struct {
 	SSHClient *devcon.SSHClient
 }
 
+// NewJuniperClient is a factory function that sets up a
+// JuniperClient.
 func NewJuniperClient(user, target string, opts ...devcon.Option) *JuniperClient {
 	khfp := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
 	client := devcon.NewClient(
@@ -59,6 +31,9 @@ func NewJuniperClient(user, target string, opts ...devcon.Option) *JuniperClient
 	return &JuniperClient{SSHClient: client}
 }
 
+// InterfacesTerse establishes a remote connection to the device,
+// runs the 'show interfaces terse' command, asking for the output in XML, and
+// unmarshals the output into an InterfaceTerse struct.
 func (jc *JuniperClient) InterfacesTerse() (InterfaceTerse, error) {
 	cmd := "show interfaces terse | display xml"
 	out, err := jc.SSHClient.Run(cmd)
@@ -73,6 +48,8 @@ func (jc *JuniperClient) InterfacesTerse() (InterfaceTerse, error) {
 	return intTerse, nil
 }
 
+// prepareDiff takes in a config and adds the necessary wrapper syntax
+// to apply the conig, print a diff, and roll it back.
 func prepareDiff(cfg []string) []string {
 	prepCfg := []string{
 		"configure private",
@@ -102,12 +79,32 @@ func prepareCfg(cfg []string) []string {
 	return prepCfg
 }
 
+// Diff logs into the Juniper device, applies the config, prints
+// a diff, rolls it back, and then logs out of the device.
 func (jc *JuniperClient) Diff(cfg []string) (string, error) {
 	cfg = prepareDiff(cfg)
 	return jc.SSHClient.RunAll(cfg...)
 }
 
+// ApplyConfig logs into the Juniper device, applies the config, prints
+// a diff, commits the config, and then logs out of the device.
 func (jc *JuniperClient) ApplyConfig(cfg []string) (string, error) {
 	cfg = prepareCfg(cfg)
 	return jc.SSHClient.RunAll(cfg...)
+}
+
+// BGPSummary establishes a remote connection to the device,
+// runs the bgp summary command, asking for the output in XML, and
+// unmarshals the output into a BGPSummary struct.
+func (jc *JuniperClient) BGPSummary() (BGPSummary, error) {
+	cmd := "show bgp summary | display xml"
+	output, err := jc.SSHClient.Run(cmd)
+	if err != nil {
+		return BGPSummary{}, fmt.Errorf("failed to run cmd: %w", err)
+	}
+	var bgpSummary BGPSummary
+	if err := xml.Unmarshal([]byte(output), &bgpSummary); err != nil {
+		return BGPSummary{}, fmt.Errorf("failed to unmarshal output: %w", err)
+	}
+	return bgpSummary, nil
 }
