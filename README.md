@@ -1,8 +1,16 @@
 # Devcon
-A simple package to ssh into devices.
 
 ## Overview
-This package only supports authentication via username/password.
+A module to ssh into devices and run commands. It supports running a single command in a remote session or running several commands in an interactive session. 
+
+## Juniper Package
+There is also a Juniper package that wraps around the base devcon package that has some logic built in to get structured data back from the devices. It also allows you to perform a "dry run" by logging in, applying a config, printing a diff, and then rolling it back before logging out of the device. 
+
+## Authentication Methods
+This package supports the following authentication methods:
+- via username/password
+- via an SSH key file
+
 
 ## Usage
 ```go
@@ -18,9 +26,10 @@ import (
 
 // Example with Password
 func main() {
+	devIP := "10.0.0.60"
 	client := devcon.NewClient(
 		os.Getenv("SSH_USER"),
-		"10.0.0.60",
+		devIP,
 		devcon.Password(os.Getenv("SSH_PASSWORD")),
 	)
 	out, err := client.Run("show version")
@@ -40,9 +49,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	devIP := "10.0.0.60"
 	client := devcon.NewClient(
-		"rolodev",
-		"10.0.0.60",
+		os.Getenv("SSH_USER"),
+		devIP,
 		devcon.PrivateKey(keyFile),
 	)
 	out, err := client.Run("show version")
@@ -51,10 +61,17 @@ func main() {
 	}
 	fmt.Println(out)
 }
+
+// Simple concurrency example with wait group
+
 ```
 
 ## TODO
-- [] Add support for public key auth.
+- [x] Add support for public key auth.
+- [x] Add Juniper package 
+  - [x] Config Differ
+  - [x] Apply Configs
+  - [x] First Operational Command Example
 
 ## Profile
 - go test -v -run Run -cpuprofile cpu.prof -memprofile mem.prof -bench .

@@ -19,8 +19,8 @@ func main() {
 		log.Fatal(err)
 	}
 	client := devcon.NewClient(
-		"rolodev",
-		"10.0.0.60",
+		os.Getenv("SSH_USER"),
+		"10.0.0.86",
 		devcon.WithPrivateKey(keyFile),
 	)
 	out, err := client.Run("show version")
