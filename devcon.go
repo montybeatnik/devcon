@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -46,7 +46,7 @@ func WithPassword(pw string) Option {
 
 // WithPrivateKey sets SSHClient's private key.
 func WithPrivateKey(keyfile string) Option {
-	privKeyData, err := ioutil.ReadFile(keyfile)
+	privKeyData, err := os.ReadFile(keyfile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -184,12 +184,12 @@ func (c *SSHClient) executeMany(cmds ...string) (bytes.Buffer, error) {
 	for _, cmd := range cmds {
 		_, err = fmt.Fprintf(stdin, "%s\n", cmd)
 		if err != nil {
-			return output, fmt.Errorf(fmt.Sprintf("Failed to get cmd output: %v", err))
+			return output, fmt.Errorf("failed to get cmd output: %w", err)
 		}
 	}
 	err = session.Wait()
 	if err != nil {
-		return output, fmt.Errorf(fmt.Sprintf("Failed to exit: %v", err))
+		return output, fmt.Errorf("failed to exit: %w", err)
 	}
 	buf, err := io.ReadAll(stdOut)
 	if err != nil {
