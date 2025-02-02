@@ -1,4 +1,4 @@
-module github.com/montybeatnik/devcon
+module github.com/montybeatnik/netgo
 
 go 1.17
 

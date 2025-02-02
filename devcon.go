@@ -1,4 +1,4 @@
-package devcon
+package netgo
 
 import (
 	"bytes"

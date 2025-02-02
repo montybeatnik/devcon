@@ -1,10 +1,10 @@
-# Devcon
+# netgo
 
 ## Overview
 A module to ssh into devices and run commands. It supports running a single command in a remote session or running several commands in an interactive session. 
 
 ## Juniper Package
-There is also a Juniper package that wraps around the base devcon package that has some logic built in to get structured data back from the devices. It also allows you to perform a "dry run" by logging in, applying a config, printing a diff, and then rolling it back before logging out of the device. 
+There is also a Juniper package that wraps around the base netgo package that has some logic built in to get structured data back from the devices. It also allows you to perform a "dry run" by logging in, applying a config, printing a diff, and then rolling it back before logging out of the device. 
 
 ## Authentication Methods
 This package supports the following authentication methods:
@@ -21,16 +21,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/montybeatnik/devcon"
+	"github.com/montybeatnik/netgo"
 )
 
 // Example with Password
 func main() {
 	devIP := "10.0.0.60"
-	client := devcon.NewClient(
+	client := netgo.NewClient(
 		os.Getenv("SSH_USER"),
 		devIP,
-		devcon.Password(os.Getenv("SSH_PASSWORD")),
+		netgo.Password(os.Getenv("SSH_PASSWORD")),
 	)
 	out, err := client.Run("show version")
 	if err != nil {
@@ -50,10 +50,10 @@ func main() {
 		log.Fatal(err)
 	}
 	devIP := "10.0.0.60"
-	client := devcon.NewClient(
+	client := netgo.NewClient(
 		os.Getenv("SSH_USER"),
 		devIP,
-		devcon.PrivateKey(keyFile),
+		netgo.PrivateKey(keyFile),
 	)
 	out, err := client.Run("show version")
 	if err != nil {

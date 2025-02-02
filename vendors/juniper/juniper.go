@@ -7,26 +7,26 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/montybeatnik/devcon"
+	"github.com/montybeatnik/netgo"
 )
 
 // JuniperClient represents a Juniper Device's SSH client.
 // It holds methods to interact with the remote device, such as
 // operational mode and configuration commands.
 type JuniperClient struct {
-	SSHClient *devcon.SSHClient
+	SSHClient *netgo.SSHClient
 }
 
 // NewJuniperClient is a factory function that sets up a
 // JuniperClient.
-func NewJuniperClient(user, target string, opts ...devcon.Option) *JuniperClient {
+func NewJuniperClient(user, target string, opts ...netgo.Option) *JuniperClient {
 	khfp := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
-	client := devcon.NewClient(
+	client := netgo.NewClient(
 		os.Getenv("SSH_USER"),
 		target,
-		devcon.WithPassword(os.Getenv("SSH_PASSWORD")),
-		devcon.WithTimeout(time.Second*1),
-		devcon.WithHostKeyCallback(khfp),
+		netgo.WithPassword(os.Getenv("SSH_PASSWORD")),
+		netgo.WithTimeout(time.Second*1),
+		netgo.WithHostKeyCallback(khfp),
 	)
 	return &JuniperClient{SSHClient: client}
 }
